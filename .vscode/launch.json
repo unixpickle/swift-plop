@@ -1,0 +1,22 @@
+{
+    "configurations": [
+        {
+            "type": "swift-lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:swift-plop}",
+            "name": "Debug swift-plop",
+            "program": "${workspaceFolder:swift-plop}/.build/debug/swift-plop",
+            "preLaunchTask": "swift: Build Debug swift-plop"
+        },
+        {
+            "type": "swift-lldb",
+            "request": "launch",
+            "args": [],
+            "cwd": "${workspaceFolder:swift-plop}",
+            "name": "Release swift-plop",
+            "program": "${workspaceFolder:swift-plop}/.build/release/swift-plop",
+            "preLaunchTask": "swift: Build Release swift-plop"
+        }
+    ]
+}

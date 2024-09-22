@@ -14,4 +14,4 @@ swift run swift-plop \
     run2 examples/run2.txt
 ```
 
-[Plot output](examples/plot.png)
+![Plot output](examples/plot.png)

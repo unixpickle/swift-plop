@@ -49,8 +49,8 @@ struct Sample: Identifiable {
     var result = [Sample]()
     var allKeys = Set<String>()
     var idx = 0.0
-    for line in contents.split(separator: "\n") {
-      let fields = try LineField.extract(line)
+    for line in contents.split(whereSeparator: \.isNewline) {
+      let fields = try LineField.extract(line.trimmingCharacters(in: .whitespacesAndNewlines))
       var mapping = [String: Double]()
       for field in fields {
         mapping[field.name] = field.value
@@ -71,7 +71,9 @@ struct Sample: Identifiable {
   }
 
   public static func sortAndDedup(_ items: [Sample]) -> [Sample] {
-    var items = items.enumerated().sorted(by: { ($0.1.id, $0.0) < ($1.1.id, $1.0) })
+    var items = items.enumerated().sorted(by: {
+      ($0.1.name, $0.1.x, $0.0) < ($1.1.name, $1.1.x, $1.0)
+    })
     var i = 0
     while i < items.count - 1 {
       if items[i].1.id == items[i + 1].1.id {

@@ -43,8 +43,8 @@ struct Main: AsyncParsableCommand {
       do {
         let rawSamples = try Sample.parse(
           URL(filePath: namesAndPaths[i + 1]), name: namesAndPaths[i], y: y, x: x)
-        let samples = Sample.smooth(rawSamples, ema: smoothing)
-        data.append(contentsOf: Sample.sortAndDedup(samples))
+        let samples = Sample.smooth(Sample.sortAndDedup(rawSamples), ema: smoothing)
+        data.append(contentsOf: samples)
       } catch {
         print("error parsing \(namesAndPaths[i+1]): \(error)")
       }

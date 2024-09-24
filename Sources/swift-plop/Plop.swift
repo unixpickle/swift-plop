@@ -50,13 +50,16 @@ struct Main: AsyncParsableCommand {
       }
     }
 
+    let yMin = data.map { $0.y }.min()
+    let yMax = data.map { $0.y }.max()
+
     let renderer = ImageRenderer(
       content: Chart(data) {
         LineMark(
           x: .value("X", $0.x),
           y: .value("Y", $0.y)
         ).foregroundStyle(by: .value("Name", $0.name))
-      }.frame(width: 400, height: 400).padding(10)
+      }.chartYScale(domain: (yMin ?? 0.0)...(yMax ?? 1)).frame(width: 400, height: 400).padding(10)
     )
     do {
       try saveImageWithWhiteBackground(

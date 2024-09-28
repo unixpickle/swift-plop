@@ -16,6 +16,12 @@ struct Main: AsyncParsableCommand {
   @Option(name: .shortAndLong, help: "padding of the plot")
   var padding: Float = 10.0
 
+  @Option(name: .long, help: "minimum y value")
+  var yMin: Double? = nil
+
+  @Option(name: .long, help: "maximum y value")
+  var yMax: Double? = nil
+
   @Option(name: .shortAndLong, help: "smoothing EMA rate (from 0 to 1)")
   var smoothing: Double = 0.0
 
@@ -50,8 +56,8 @@ struct Main: AsyncParsableCommand {
       }
     }
 
-    let yMin = data.map { $0.y }.min()
-    let yMax = data.map { $0.y }.max()
+    let yMin = self.yMin ?? data.map { $0.y }.min()
+    let yMax = self.yMax ?? data.map { $0.y }.max()
 
     let renderer = ImageRenderer(
       content: Chart(data) {

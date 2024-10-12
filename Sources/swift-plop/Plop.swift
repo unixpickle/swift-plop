@@ -16,6 +16,12 @@ struct Main: AsyncParsableCommand {
   @Option(name: .shortAndLong, help: "padding of the plot")
   var padding: Float = 10.0
 
+  @Option(name: .long, help: "minimum x value")
+  var xMin: Double? = nil
+
+  @Option(name: .long, help: "maximum x value")
+  var xMax: Double? = nil
+
   @Option(name: .long, help: "minimum y value")
   var yMin: Double? = nil
 
@@ -56,6 +62,8 @@ struct Main: AsyncParsableCommand {
       }
     }
 
+    let xMin = self.xMin ?? data.map { $0.x }.min()
+    let xMax = self.xMax ?? data.map { $0.x }.max()
     let yMin = self.yMin ?? data.map { $0.y }.min()
     let yMax = self.yMax ?? data.map { $0.y }.max()
 
@@ -65,7 +73,9 @@ struct Main: AsyncParsableCommand {
           x: .value("X", $0.x),
           y: .value("Y", $0.y)
         ).foregroundStyle(by: .value("Name", $0.name))
-      }.chartYScale(domain: (yMin ?? 0.0)...(yMax ?? 1)).frame(width: 400, height: 400).padding(10)
+      }.chartXScale(domain: (xMin ?? 0.0)...(xMax ?? 1)).chartYScale(
+        domain: (yMin ?? 0.0)...(yMax ?? 1)
+      ).frame(width: 400, height: 400).padding(10)
     )
     do {
       try saveImageWithWhiteBackground(

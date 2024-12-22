@@ -43,7 +43,7 @@ struct Sample: Identifiable {
   public static func parse(_ from: URL, name: String, y: String, x: String? = nil) throws
     -> [Sample]
   {
-    guard let contents = String(data: try Data(contentsOf: from), encoding: .utf8) else {
+    guard let contents = String(data: try readFile(at: from), encoding: .utf8) else {
       throw LoadError.decodeString
     }
     var result = [Sample]()
@@ -95,5 +95,18 @@ struct Sample: Identifiable {
       result.append(Sample(name: item.name, x: item.x, y: mean / count))
     }
     return result
+  }
+}
+
+func readFile(at url: URL) throws -> Data {
+  if url.path().hasPrefix("/dev/fd/"),
+    let fileDescriptor = Int32(url.path().replacingOccurrences(of: "/dev/fd/", with: ""))
+  {
+    let fileHandle = FileHandle(fileDescriptor: fileDescriptor)
+    let data = fileHandle.readDataToEndOfFile()
+    fileHandle.closeFile()
+    return data
+  } else {
+    return try Data(contentsOf: url)
   }
 }

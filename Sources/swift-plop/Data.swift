@@ -10,7 +10,7 @@ struct LineField {
   let name: String
   let value: Double
 
-  private static let expr = #/([^ ]*)=([^ ]*)/#
+  private static let expr = #/([^ ]*)=([^ >]+)/#
   private static let stepExpr = #/step ([0-9]*):/#
 
   public static func extract(_ s: some StringProtocol) throws -> [LineField] {

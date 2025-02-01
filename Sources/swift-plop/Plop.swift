@@ -40,6 +40,12 @@ struct Main: AsyncParsableCommand {
   @Option(name: .shortAndLong, help: "y axis field name")
   var y: String
 
+  @Option(name: .long, help: "x axis label")
+  var xLabel: String? = nil
+
+  @Option(name: .long, help: "y axis label")
+  var yLabel: String? = nil
+
   @Argument(help: "a sequence of [name] [path] pairs")
   var namesAndPaths: [String]
 
@@ -67,15 +73,25 @@ struct Main: AsyncParsableCommand {
     let yMin = self.yMin ?? data.map { $0.y }.min()
     let yMax = self.yMax ?? data.map { $0.y }.max()
 
-    let renderer = ImageRenderer(
-      content: Chart(data) {
+    var content: AnyView = AnyView(
+      Chart(data) {
         LineMark(
           x: .value("X", $0.x),
           y: .value("Y", $0.y)
         ).foregroundStyle(by: .value("Name", $0.name))
       }.chartXScale(domain: (xMin ?? 0.0)...(xMax ?? 1)).chartYScale(
         domain: (yMin ?? 0.0)...(yMax ?? 1)
-      ).frame(width: 400, height: 400).padding(10)
+      ))
+
+    if let xLabel = xLabel {
+      content = AnyView(content.chartXAxisLabel(xLabel))
+    }
+    if let yLabel = yLabel {
+      content = AnyView(content.chartYAxisLabel(yLabel))
+    }
+
+    let renderer = ImageRenderer(
+      content: content.frame(width: 400, height: 400).padding(10)
     )
     do {
       try saveImageWithWhiteBackground(

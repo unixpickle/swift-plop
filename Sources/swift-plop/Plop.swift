@@ -1,9 +1,7 @@
-// The Swift Programming Language
-// https://docs.swift.org/swift-book
-
 import ArgumentParser
 import Charts
 import SwiftUI
+import UniformTypeIdentifiers
 
 @main
 struct Main: AsyncParsableCommand {
@@ -45,6 +43,9 @@ struct Main: AsyncParsableCommand {
 
   @Option(name: .long, help: "y axis label")
   var yLabel: String? = nil
+
+  @Option(name: .long, help: "resolution scale")
+  var imageScale: Float = 1.0
 
   @Argument(help: "a sequence of [name] [path] pairs")
   var namesAndPaths: [String]
@@ -93,9 +94,10 @@ struct Main: AsyncParsableCommand {
     let renderer = ImageRenderer(
       content: content.frame(width: 400, height: 400).padding(10)
     )
+    renderer.scale = CGFloat(imageScale)
     do {
       try saveImageWithWhiteBackground(
-        originalImage: renderer.nsImage!, outputURL: URL(filePath: outPath))
+        originalCGImage: renderer.cgImage!, outputURL: URL(filePath: outPath))
     } catch {
       print("error saving: \(error)")
     }
@@ -103,37 +105,46 @@ struct Main: AsyncParsableCommand {
 }
 
 enum SaveError: Error {
-  case createTIFFFailed
-  case createBitmapRepFailed
-  case createPNGFailed
-  case writePNGFailed(Error)
+  case writePNGFailed
+  case contextCreationFailed
 }
 
-func saveImageWithWhiteBackground(originalImage: NSImage, outputURL: URL) throws {
-  let imageSize = originalImage.size
-  let newImage = NSImage(size: imageSize)
+func saveImageWithWhiteBackground(originalCGImage: CGImage, outputURL: URL) throws {
+  let width = originalCGImage.width
+  let height = originalCGImage.height
+  let colorSpace = CGColorSpaceCreateDeviceRGB()
 
-  newImage.lockFocus()
-
-  NSColor.white.setFill()
-  let rect = NSRect(origin: .zero, size: imageSize)
-  rect.fill()
-  originalImage.draw(in: rect)
-
-  newImage.unlockFocus()
-
-  guard let tiffData = newImage.tiffRepresentation else {
-    throw SaveError.createTIFFFailed
+  guard
+    let context = CGContext(
+      data: nil,
+      width: width,
+      height: height,
+      bitsPerComponent: 8,
+      bytesPerRow: 0,
+      space: colorSpace,
+      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue
+    )
+  else {
+    throw SaveError.contextCreationFailed
   }
-  guard let bitmapRep = NSBitmapImageRep(data: tiffData) else {
-    throw SaveError.createBitmapRepFailed
+
+  context.setFillColor(CGColor(red: 1, green: 1, blue: 1, alpha: 1))
+  context.fill(CGRect(x: 0, y: 0, width: width, height: height))
+
+  context.draw(originalCGImage, in: CGRect(x: 0, y: 0, width: width, height: height))
+
+  guard let finalImage = context.makeImage() else {
+    throw SaveError.contextCreationFailed
   }
-  guard let pngData = bitmapRep.representation(using: .png, properties: [:]) else {
-    throw SaveError.createPNGFailed
+
+  guard
+    let destination = CGImageDestinationCreateWithURL(
+      outputURL as CFURL, UTType.png.identifier as CFString, 1, nil)
+  else {
+    throw SaveError.writePNGFailed
   }
-  do {
-    try pngData.write(to: outputURL)
-  } catch {
-    throw SaveError.writePNGFailed(error)
+  CGImageDestinationAddImage(destination, finalImage, nil)
+  if !CGImageDestinationFinalize(destination) {
+    throw SaveError.writePNGFailed
   }
 }
